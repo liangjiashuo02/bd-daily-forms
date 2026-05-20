@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BD 工作台</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'PingFang SC', sans-serif; background: #f0f4f8; min-height: 100vh; padding: 32px 16px; }
+.container { max-width: 480px; margin: 0 auto; }
+.header { text-align: center; margin-bottom: 28px; }
+.header h1 { font-size: 24px; color: #1a1a1a; font-weight: 700; }
+.header p { font-size: 14px; color: #888; margin-top: 6px; }
+.card {
+  background: white; border-radius: 16px; padding: 24px;
+  margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  display: flex; align-items: center; gap: 18px;
+  text-decoration: none; color: inherit;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+.card .icon { font-size: 40px; flex-shrink: 0; }
+.card .info h2 { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+.card .info p { font-size: 13px; color: #888; line-height: 1.5; }
+.card .arrow { margin-left: auto; font-size: 20px; color: #ccc; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🐉 BD 工作台</h1>
+    <p>秦皇岛河东区域</p>
+  </div>
+  <a href="daily.html" class="card">
+    <div class="icon">📋</div>
+    <div class="info">
+      <h2>每日日报</h2>
+      <p>填写今日工作数据，自动汇总到学城表格</p>
+    </div>
+    <div class="arrow">›</div>
+  </a>
+  <a href="coupon-feedback.html" class="card">
+    <div class="icon">⚡</div>
+    <div class="info">
+      <h2>神抢手券包新增反馈</h2>
+      <p>商家、商品、价格、C端截图一键提交</p>
+    </div>
+    <div class="arrow">›</div>
+  </a>
+</div>
+</body>
+</html>
