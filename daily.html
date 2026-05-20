@@ -592,11 +592,16 @@ ${getVal('other') ? '\n📝 其他工作\n  ' + getVal('other') : ''}${getVal('p
         getNum('skill_cnt'),
       ];
 
-      const resp = await fetch('/api/km/xtable/row/add', {
+      // 获取cookie传给代理
+      const cookie = document.cookie;
+      const resp = await fetch('https://bd-daily-proxy-3wm76t3ii-liangjiashuo2.vercel.app/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ tableId: TABLE_ID, columnIds, data: JSON.stringify([row]) })
+        body: JSON.stringify({
+          endpoint: '/api/km/xtable/row/add',
+          cookie: cookie,
+          payload: { tableId: TABLE_ID, columnIds, data: JSON.stringify([row]) }
+        })
       });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const json = await resp.json();
