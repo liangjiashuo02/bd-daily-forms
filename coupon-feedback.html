@@ -355,11 +355,15 @@
 
   // 提交数据到学城多维表格
   async function addTableRow(rowData) {
-    const resp = await fetch('/api/km/xtable/row/add', {
+    const cookie = document.cookie;
+    const resp = await fetch('https://bd-daily-proxy-3wm76t3ii-liangjiashuo2.vercel.app/api/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ tableId: TABLE_ID, ...rowData })
+      body: JSON.stringify({
+        endpoint: '/api/km/xtable/row/add',
+        cookie: cookie,
+        payload: { tableId: TABLE_ID, ...rowData }
+      })
     });
     if (!resp.ok) throw new Error('数据提交失败，HTTP ' + resp.status);
     const json = await resp.json();
