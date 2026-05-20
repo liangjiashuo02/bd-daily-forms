@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BD 每日日报</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #e8f4fd 0%, #ddeeff 100%);
+      min-height: 100vh;
+      padding: 24px 16px 40px;
+    }
+    .container { max-width: 660px; margin: 0 auto; }
+
+    .header {
+      background: linear-gradient(135deg, #1565C0, #1976D2);
+      border-radius: 16px 16px 0 0;
+      padding: 26px 32px 22px;
+      color: white;
+      text-align: center;
+    }
+    .header .logo { font-size: 34px; margin-bottom: 8px; }
+    .header h1 { font-size: 21px; font-weight: 700; margin-bottom: 4px; }
+    .header p { font-size: 13px; opacity: 0.8; }
+
+    .form-card {
+      background: white;
+      border-radius: 0 0 16px 16px;
+      padding: 28px 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    }
+
+    .section {
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
+      padding: 7px 14px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .section-title.blue   { background: #1976D2; }
+    .section-title.orange { background: #E65100; }
+    .section-title.green  { background: #2E7D32; }
+    .section-title.purple { background: #6A1B9A; }
+    .section-title.teal   { background: #00695C; }
+    .section-title.gray   { background: #546E7A; }
+
+    .fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .fields-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    .fields-grid.full  { grid-template-columns: 1fr; }
+
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 13px; font-weight: 600; color: #444; }
+    label .required { color: #E53935; margin-left: 2px; }
+    label .unit { font-size: 11px; font-weight: 400; color: #999; margin-left: 4px; }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%; padding: 9px 12px;
+      border: 1.5px solid #E0E0E0; border-radius: 7px;
+      font-size: 13px; color: #333; background: #FAFAFA;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none; appearance: none; -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #1976D2;
+      box-shadow: 0 0 0 3px rgba(25,118,210,0.12);
+      background: white;
+    }
+    textarea { resize: vertical; min-height: 72px; }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+    }
+
+    /* 数字输入带前缀 */
+    .input-wrap { position: relative; }
+    .input-wrap .suffix {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 12px; color: #AAA; pointer-events: none;
+    }
+    .input-wrap input { padding-right: 32px; }
+
+    .divider { border: none; border-top: 1px solid #F0F0F0; margin: 20px 0; }
+
+    /* 进度条样式显示完成情况 */
+    .progress-hint {
+      font-size: 11px; color: #999; margin-top: 3px;
+    }
+
+    /* 底部按钮 */
+    .btn-row { display: flex; gap: 12px; margin-top: 8px; }
+    .submit-btn, .preview-btn {
+      flex: 1; padding: 13px;
+      border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.5px;
+    }
+    .submit-btn { background: linear-gradient(135deg, #1565C0, #1976D2); color: white; }
+    .preview-btn { background: #F5F5F5; color: #555; }
+    .submit-btn:hover, .preview-btn:hover { opacity: 0.88; }
+    .submit-btn:active, .preview-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .status-bar {
+      padding: 10px 14px; border-radius: 8px;
+      font-size: 13px; margin-top: 12px; display: none;
+    }
+    .status-bar.loading { background: #E3F2FD; color: #0D47A1; display: block; }
+    .status-bar.error   { background: #FFEBEE; color: #B71C1C; display: block; }
+
+    /* 预览弹窗 */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      align-items: flex-start; justify-content: center;
+      padding: 20px 16px; overflow-y: auto;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white; border-radius: 16px;
+      max-width: 600px; width: 100%;
+      margin: auto; animation: popIn 0.2s ease;
+    }
+    @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-header {
+      background: linear-gradient(135deg, #1565C0, #1976D2);
+      color: white; padding: 18px 24px; border-radius: 16px 16px 0 0;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-header h2 { font-size: 16px; }
+    .modal-close {
+      background: rgba(255,255,255,0.25); border: none; color: white;
+      width: 28px; height: 28px; border-radius: 50%; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-body { padding: 20px 24px; }
+    .preview-content {
+      background: #F8F9FA; border-radius: 10px; padding: 18px 20px;
+      font-size: 13px; line-height: 2; white-space: pre-wrap;
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: #333;
+    }
+    .modal-footer {
+      padding: 16px 24px; border-top: 1px solid #F0F0F0;
+      display: flex; gap: 10px; justify-content: flex-end;
+    }
+    .modal-footer button {
+      padding: 9px 24px; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer; border: none;
+    }
+    .btn-copy { background: #E3F2FD; color: #1565C0; }
+    .btn-submit { background: linear-gradient(135deg, #1565C0, #1976D2); color: white; }
+
+    /* 成功弹窗 */
+    .success-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 300;
+      align-items: center; justify-content: center;
+    }
+    .success-modal.show { display: flex; }
+    .success-box {
+      background: white; border-radius: 16px; padding: 36px 28px;
+      text-align: center; max-width: 300px; width: 90%;
+      animation: popIn 0.25s ease;
+    }
+    .success-box .icon { font-size: 48px; margin-bottom: 12px; }
+    .success-box h2 { font-size: 18px; color: #333; margin-bottom: 8px; }
+    .success-box p { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.7; }
+    .success-box button {
+      background: linear-gradient(135deg, #1565C0, #1976D2);
+      color: white; border: none; border-radius: 8px;
+      padding: 10px 28px; font-size: 14px; cursor: pointer; font-weight: 600;
+    }
+
+    @media (max-width: 500px) {
+      .form-card { padding: 18px 16px; }
+      .fields-grid, .fields-grid.three { grid-template-columns: 1fr 1fr; }
+      .header { padding: 20px 18px 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">📋</div>
+    <h1>BD 每日日报</h1>
+    <p>填写完成后数据自动汇总到学城表格</p>
+  </div>
+
+  <div class="form-card">
+    <form id="dailyForm" onsubmit="handleSubmit(event)">
+
+      <!-- 基本信息 -->
+      <div class="section">
+        <div class="section-title blue">👤 基本信息</div>
+        <div class="fields-grid three">
+          <div class="form-group">
+            <label>日报日期 <span class="required">*</span></label>
+            <input type="date" id="reportDate" required>
+          </div>
+          <div class="form-group">
+            <label>MIS 号 <span class="required">*</span></label>
+            <input type="text" id="mis" placeholder="如：zhangsan" required>
+          </div>
+          <div class="form-group">
+            <label>姓名 <span class="required">*</span></label>
+            <input type="text" id="bdName" placeholder="真实姓名" required>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="form-group">
+            <label>所属蜂窝</label>
+            <input type="text" id="area" placeholder="如：QH-万达广场">
+          </div>
+        </div>
+      </div>
+
+      <!-- 神抢手/券包 -->
+      <div class="section">
+        <div class="section-title orange">⚡ 神抢手 / 券包</div>
+        <div class="fields-grid three">
+          <div class="form-group">
+            <label>券包新增 <span class="unit">（个）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="sq_new" min="0" placeholder="0">
+              <span class="suffix">个</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>85折下探 <span class="unit">（个）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="sq_85" min="0" placeholder="0">
+              <span class="suffix">个</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>货架同品整改 <span class="unit">（个）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="sq_fix" min="0" placeholder="0">
+              <span class="suffix">个</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 新签上线 -->
+      <div class="section">
+        <div class="section-title green">🏪 新签上线</div>
+        <div class="fields-grid">
+          <div class="form-group">
+            <label>重点新签上线 <span class="unit">（家）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="sign_key" min="0" placeholder="0">
+              <span class="suffix">家</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>全量新签上线 <span class="unit">（家）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="sign_all" min="0" placeholder="0">
+              <span class="suffix">家</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 拜访 -->
+      <div class="section">
+        <div class="section-title purple">🚶 拜访情况</div>
+        <div class="fields-grid">
+          <div class="form-group">
+            <label>总拜访数 <span class="unit">（次）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="visit_total" min="0" placeholder="0">
+              <span class="suffix">次</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>有效拜访数 <span class="unit">（次）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="visit_valid" min="0" placeholder="0">
+              <span class="suffix">次</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 体验分整改 -->
+      <div class="section">
+        <div class="section-title teal">⭐ 体验分整改</div>
+        <div class="fields-grid three">
+          <div class="form-group">
+            <label>起送价整改 <span class="unit">（家）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="exp_min" min="0" placeholder="0">
+              <span class="suffix">家</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>配送费整改 <span class="unit">（家）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="exp_fee" min="0" placeholder="0">
+              <span class="suffix">家</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>商品lose整改 <span class="unit">（家）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="exp_item" min="0" placeholder="0">
+              <span class="suffix">家</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 夜宵/大额券 -->
+      <div class="section">
+        <div class="section-title" style="background:#B71C1C;">🌙 夜宵 / 大额券</div>
+        <div class="fields-grid">
+          <div class="form-group">
+            <label>提升家数 <span class="unit">（家）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="night_num" min="0" placeholder="0">
+              <span class="suffix">家</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>目标完成情况</label>
+            <select id="night_done">
+              <option value="">请选择</option>
+              <option value="已完成">✅ 已完成</option>
+              <option value="未完成">❌ 未完成</option>
+              <option value="进行中">⏳ 进行中</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 商品不及预期整改 -->
+      <div class="section">
+        <div class="section-title" style="background:#F57F17;">📉 商品不及预期整改</div>
+        <div class="fields-grid">
+          <div class="form-group">
+            <label>整改商品数 <span class="unit">（个）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="goods_fix_num" min="0" placeholder="0">
+              <span class="suffix">个</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>预计达成率 <span class="unit">（%）</span></label>
+            <input type="text" id="goods_fix_rate" placeholder="如：8%">
+          </div>
+        </div>
+      </div>
+
+      <!-- 高优商家神抢手覆盖 -->
+      <div class="section">
+        <div class="section-title" style="background:#1B5E20;">🌟 高优商家 / 套餐覆盖</div>
+        <div class="fields-grid">
+          <div class="form-group">
+            <label>高优神抢手（80%）今日提升 <span class="unit">（家）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="top_sq" min="0" placeholder="0">
+              <span class="suffix">家</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>3坑位（75%）今日提升 <span class="unit">（家）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="top_3pit" min="0" placeholder="0">
+              <span class="suffix">家</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>高优套餐（75%）今日提升 <span class="unit">（个）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="top_combo" min="0" placeholder="0">
+              <span class="suffix">个</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>蛋糕品类神抢手覆盖 <span class="unit">（家）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="cake_sq" min="0" placeholder="0">
+              <span class="suffix">家</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 龙虾Skill -->
+      <div class="section">
+        <div class="section-title" style="background:#880E4F;">🦞 龙虾 Skill 使用</div>
+        <div class="fields-grid">
+          <div class="form-group">
+            <label>今日使用次数 <span class="unit">（次）</span></label>
+            <div class="input-wrap">
+              <input type="number" id="skill_cnt" min="0" placeholder="0">
+              <span class="suffix">次</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 其他 & 明日计划 -->
+      <div class="section">
+        <div class="section-title gray">📝 其他 & 明日计划</div>
+        <div class="fields-grid full">
+          <div class="form-group">
+            <label>其他工作内容 <span style="font-size:11px;color:#999;font-weight:400;">（选填）</span></label>
+            <textarea id="other" placeholder="今日其他重点工作，如：特殊整改、客诉处理、活动报名等..." maxlength="300"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:10px;">
+            <label>明日计划 <span style="font-size:11px;color:#999;font-weight:400;">（选填）</span></label>
+            <textarea id="plan" placeholder="明日主要工作计划..." maxlength="300"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="status-bar" id="statusBar"></div>
+
+      <div class="btn-row">
+        <button type="button" class="preview-btn" onclick="showPreview()">👁 预览日报</button>
+        <button type="submit" class="submit-btn" id="submitBtn">🚀 提交日报</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 预览弹窗 -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>📋 日报预览</h2>
+      <button class="modal-close" onclick="closePreview()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="preview-content" id="previewText"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-copy" onclick="copyReport()">📋 复制文本</button>
+      <button class="btn-submit" onclick="submitFromPreview()">🚀 确认提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- 成功弹窗 -->
+<div class="success-modal" id="successModal">
+  <div class="success-box">
+    <div class="icon">🎉</div>
+    <h2>日报提交成功！</h2>
+    <p>数据已写入学城汇总表格<br>
+      <a href="https://km.sankuai.com/xtable/2763575110?table=2762868818" target="_blank" style="color:#1976D2;">查看汇总数据 →</a>
+    </p>
+    <button onclick="resetForm()">继续填写</button>
+  </div>
+</div>
+
+<script>
+  // ===== 配置 =====
+  const TABLE_ID   = '2762868818';
+  const CONTENT_ID = '2763575110';
+  const COL = { date:1, mis:2, name:3, area:4, sq_new:5, sq_85:6, sq_fix:7, sign_key:8, sign_all:9, visit_total:10, visit_valid:11, exp_min:12, exp_fee:13, exp_item:14, night_num:15, night_done:16, other:17, plan:18, goods_fix_num:1244715829, goods_fix_rate:1244719925, top_sq:1244724021, top_3pit:1244728117, top_combo:1244732213, cake_sq:1244736309, skill_cnt:1244740405 };
+  // =================
+
+  // 初始化今天日期
+  document.getElementById('reportDate').value = new Date().toISOString().slice(0,10);
+
+  function getVal(id) { return document.getElementById(id)?.value?.trim() || ''; }
+  function getNum(id) { const v = parseFloat(document.getElementById(id)?.value); return isNaN(v) ? 0 : v; }
+
+  function buildReport() {
+    const date = getVal('reportDate');
+    const mis  = getVal('mis');
+    const name = getVal('bdName');
+    const area = getVal('area');
+    return `【BD日报】${date}  ${name}（${mis}）${area ? '  蜂窝：' + area : ''}
+
+⚡ 神抢手 / 券包
+  · 券包新增：${getNum('sq_new')} 个
+  · 85折下探：${getNum('sq_85')} 个
+  · 货架同品整改：${getNum('sq_fix')} 个
+
+🏪 新签上线
+  · 重点新签：${getNum('sign_key')} 家
+  · 全量新签：${getNum('sign_all')} 家
+
+🚶 拜访情况
+  · 总拜访：${getNum('visit_total')} 次
+  · 有效拜访：${getNum('visit_valid')} 次
+
+⭐ 体验分整改
+  · 起送价：${getNum('exp_min')} 家
+  · 配送费：${getNum('exp_fee')} 家
+  · 商品lose：${getNum('exp_item')} 家
+
+🌙 夜宵 / 大额券
+  · 提升家数：${getNum('night_num')} 家
+  · 目标完成：${getVal('night_done') || '-'}
+
+📉 商品不及预期整改
+  · 整改商品数：${getNum('goods_fix_num')} 个
+  · 预计达成率：${getVal('goods_fix_rate') || '-'}
+
+🌟 高优商家 / 套餐覆盖
+  · 高优神抢手（80%）提升：${getNum('top_sq')} 家
+  · 3坑位（75%）提升：${getNum('top_3pit')} 家
+  · 高优套餐（75%）提升：${getNum('top_combo')} 个
+  · 蛋糕品类覆盖：${getNum('cake_sq')} 家
+
+🦞 龙虾Skill今日使用：${getNum('skill_cnt')} 次
+${getVal('other') ? '\n📝 其他工作\n  ' + getVal('other') : ''}${getVal('plan') ? '\n\n🗓 明日计划\n  ' + getVal('plan') : ''}`;
+  }
+
+  function showPreview() {
+    const mis = getVal('mis'), name = getVal('bdName'), date = getVal('reportDate');
+    if (!mis || !name || !date) { alert('请先填写日报日期、MIS号和姓名'); return; }
+    document.getElementById('previewText').textContent = buildReport();
+    document.getElementById('previewModal').classList.add('show');
+  }
+
+  function closePreview() { document.getElementById('previewModal').classList.remove('show'); }
+
+  function copyReport() {
+    navigator.clipboard.writeText(document.getElementById('previewText').textContent)
+      .then(() => { alert('已复制到剪贴板！'); })
+      .catch(() => {
+        const el = document.getElementById('previewText');
+        const sel = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand('copy');
+        alert('已复制到剪贴板！');
+      });
+  }
+
+  function submitFromPreview() {
+    closePreview();
+    document.getElementById('dailyForm').dispatchEvent(new Event('submit'));
+  }
+
+  function setStatus(type, msg) {
+    const bar = document.getElementById('statusBar');
+    bar.className = 'status-bar ' + type;
+    bar.textContent = msg;
+  }
+
+  async function handleSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const mis = getVal('mis'), name = getVal('bdName'), date = getVal('reportDate');
+    if (!mis || !name || !date) { alert('请填写日报日期、MIS号和姓名'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    setStatus('loading', '⏳ 正在提交日报，请稍候...');
+
+    try {
+      const ts = new Date(date).getTime();
+      const columnIds = Object.values(COL).join(',');
+      const row = [
+        ts,
+        mis, name, getVal('area'),
+        getNum('sq_new'), getNum('sq_85'), getNum('sq_fix'),
+        getNum('sign_key'), getNum('sign_all'),
+        getNum('visit_total'), getNum('visit_valid'),
+        getNum('exp_min'), getNum('exp_fee'), getNum('exp_item'),
+        getNum('night_num'), getVal('night_done') || '',
+        getVal('other'), getVal('plan'),
+        getNum('goods_fix_num'), getVal('goods_fix_rate'),
+        getNum('top_sq'), getNum('top_3pit'), getNum('top_combo'), getNum('cake_sq'),
+        getNum('skill_cnt'),
+      ];
+
+      const resp = await fetch('/api/km/xtable/row/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ tableId: TABLE_ID, columnIds, data: JSON.stringify([row]) })
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const json = await resp.json();
+      if (json.code !== 0) throw new Error(json.message || '提交失败');
+
+      document.getElementById('statusBar').style.display = 'none';
+      document.getElementById('successModal').classList.add('show');
+
+    } catch(err) {
+      setStatus('error', '❌ 提交失败：' + (err.message || '请重试') + '。如在内网环境仍失败，请检查 SSO 登录态。');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('dailyForm').reset();
+    document.getElementById('reportDate').value = new Date().toISOString().slice(0,10);
+    document.getElementById('statusBar').style.display = 'none';
+    document.getElementById('successModal').classList.remove('show');
+  }
+
+  // 自动从URL参数预填MIS（可选）
+  const urlMis = new URLSearchParams(location.search).get('mis');
+  if (urlMis) document.getElementById('mis').value = urlMis;
+</script>
+</body>
+</html>
