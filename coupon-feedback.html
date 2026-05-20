@@ -356,7 +356,7 @@
   // 提交数据到学城多维表格
   async function addTableRow(rowData) {
     const cookie = document.cookie;
-    const resp = await fetch('https://bd-daily-proxy-3wm76t3ii-liangjiashuo2.vercel.app/api/submit', {
+    const resp = await fetch('http://localhost:9527', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
