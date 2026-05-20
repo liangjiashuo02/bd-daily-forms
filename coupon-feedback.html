@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>神抢手券包新增反馈</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #fff7e6 0%, #ffe8c0 100%);
+      min-height: 100vh;
+      padding: 30px 16px;
+    }
+    .container { max-width: 640px; margin: 0 auto; }
+    .header {
+      background: linear-gradient(135deg, #FF6B00, #FF9500);
+      border-radius: 16px 16px 0 0;
+      padding: 28px 32px 24px;
+      color: white;
+      text-align: center;
+    }
+    .header .logo { font-size: 36px; margin-bottom: 8px; }
+    .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .header p { font-size: 13px; opacity: 0.85; }
+    .form-card {
+      background: white;
+      border-radius: 0 0 16px 16px;
+      padding: 28px 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    }
+    .form-group { margin-bottom: 22px; }
+    label { display: block; font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    label .required { color: #FF4D4F; margin-left: 2px; }
+    label .tag { font-size: 11px; font-weight: 400; color: #999; margin-left: 6px; }
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%; padding: 10px 14px; border: 1.5px solid #E5E5E5; border-radius: 8px;
+      font-size: 14px; color: #333; background: #FAFAFA;
+      transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+      appearance: none; -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #FF6B00; box-shadow: 0 0 0 3px rgba(255,107,0,0.12); background: white;
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+    }
+    .price-row { display: flex; gap: 12px; align-items: flex-end; }
+    .price-row .form-group { flex: 1; margin-bottom: 0; }
+    .upload-area {
+      border: 2px dashed #FFB266; border-radius: 10px; padding: 24px 16px; text-align: center;
+      background: #FFF9F0; cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .upload-area:hover { border-color: #FF6B00; background: #FFF3E0; }
+    .upload-area .icon { font-size: 32px; margin-bottom: 8px; }
+    .upload-area .text { font-size: 14px; color: #666; }
+    .upload-area .hint { font-size: 12px; color: #999; margin-top: 4px; }
+    .upload-area input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%; border: none; padding: 0; background: none;
+    }
+    .preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .preview-item {
+      width: 88px; height: 88px; border-radius: 8px; overflow: hidden;
+      position: relative; border: 1px solid #eee;
+    }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-item .remove-btn {
+      position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
+      background: rgba(0,0,0,0.55); border-radius: 50%; color: white; font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: none; line-height: 1;
+    }
+    .divider { border: none; border-top: 1px solid #F0F0F0; margin: 24px 0; }
+    .section-title {
+      font-size: 15px; font-weight: 700; color: #FF6B00; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::before {
+      content: ''; display: inline-block; width: 4px; height: 16px;
+      background: #FF6B00; border-radius: 2px;
+    }
+    .submit-btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #FF6B00, #FF9500);
+      color: white; border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 8px; letter-spacing: 1px;
+    }
+    .submit-btn:hover { opacity: 0.92; }
+    .submit-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: white; border-radius: 16px; padding: 36px 28px;
+      text-align: center; max-width: 320px; width: 90%;
+      animation: popIn 0.25s ease;
+    }
+    @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal .icon { font-size: 48px; margin-bottom: 12px; }
+    .modal h2 { font-size: 18px; color: #333; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: #888; margin-bottom: 20px; line-height: 1.6; }
+    .modal button {
+      background: linear-gradient(135deg, #FF6B00, #FF9500);
+      color: white; border: none; border-radius: 8px;
+      padding: 10px 32px; font-size: 15px; cursor: pointer; font-weight: 600;
+    }
+    .char-count { font-size: 11px; color: #bbb; text-align: right; margin-top: 4px; }
+    .status-bar {
+      padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-top: 12px;
+      display: none;
+    }
+    .status-bar.loading { background: #FFF7E6; color: #D46B08; display: block; }
+    .status-bar.error { background: #FFF1F0; color: #CF1322; display: block; }
+    .note-box {
+      background: #FFF7E6; border: 1px solid #FFD591; border-radius: 8px;
+      padding: 12px 14px; margin-bottom: 20px; font-size: 12px; color: #874D00; line-height: 1.7;
+    }
+    @media (max-width: 480px) {
+      .form-card { padding: 20px 18px; }
+      .header { padding: 22px 18px 18px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">⚡</div>
+    <h1>神抢手券包新增反馈</h1>
+    <p>填写后数据将自动汇总到管理表格</p>
+  </div>
+
+  <div class="form-card">
+
+    <div class="note-box">
+      📋 数据提交后自动写入学城多维表格，管理者可实时查看所有反馈记录。<br>
+      🔑 提交需要美团内网环境（使用 SSO 登录态）。
+    </div>
+
+    <form id="feedbackForm" onsubmit="handleSubmit(event)">
+
+      <div class="section-title">基本信息</div>
+
+      <div class="form-group">
+        <label>提交人 MIS 号 <span class="required">*</span></label>
+        <input type="text" name="mis_id" id="mis_id" placeholder="请输入您的 MIS 号" required>
+      </div>
+
+      <div class="form-group">
+        <label>提交日期 <span class="required">*</span></label>
+        <input type="date" name="submit_date" id="submitDate" required>
+      </div>
+
+      <hr class="divider">
+      <div class="section-title">商家信息</div>
+
+      <div class="form-group">
+        <label>商家名称 <span class="required">*</span></label>
+        <input type="text" name="merchant_name" placeholder="请输入商家名称" required>
+      </div>
+
+      <div class="form-group">
+        <label>商家 ID（wmPoiId）<span class="required">*</span></label>
+        <input type="text" name="merchant_id" placeholder="请输入外卖商家 ID" required>
+      </div>
+
+      <div class="form-group">
+        <label>所属蜂窝 <span class="tag">选填</span></label>
+        <input type="text" name="area" placeholder="如：QH-万达广场">
+      </div>
+
+      <hr class="divider">
+      <div class="section-title">券包信息</div>
+
+      <div class="form-group">
+        <label>商品名称 <span class="required">*</span></label>
+        <input type="text" name="product_name" placeholder="请输入商品名称" required>
+      </div>
+
+      <div class="form-group">
+        <label>券包类型 <span class="required">*</span></label>
+        <select name="coupon_type" required>
+          <option value="">请选择券包类型</option>
+          <option value="85折券包">85折券包</option>
+          <option value="神抢手单品券">神抢手单品券</option>
+          <option value="套餐券包">套餐券包</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>价格信息 <span class="required">*</span></label>
+        <div class="price-row">
+          <div class="form-group">
+            <label style="font-weight:400; color:#888; font-size:12px;">原价（元）</label>
+            <input type="number" name="original_price" id="oriPrice" placeholder="0.00" step="0.01" min="0" required>
+          </div>
+          <div class="form-group">
+            <label style="font-weight:400; color:#888; font-size:12px;">活动价（元）</label>
+            <input type="number" name="activity_price" id="actPrice" placeholder="0.00" step="0.01" min="0" required>
+          </div>
+          <div class="form-group">
+            <label style="font-weight:400; color:#888; font-size:12px;">折扣</label>
+            <input type="text" id="discountDisplay" placeholder="自动计算" readonly style="color:#FF6B00; font-weight:600;">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>补贴来源 <span class="tag">选填</span></label>
+        <select name="subsidy_source">
+          <option value="">请选择补贴来源</option>
+          <option value="商补">商补</option>
+          <option value="美补">美补</option>
+          <option value="商补+美补">商补+美补</option>
+        </select>
+      </div>
+
+      <hr class="divider">
+      <div class="section-title">C端截图</div>
+
+      <div class="form-group">
+        <label>C端页面截图 <span class="required">*</span><span class="tag">可上传多张</span></label>
+        <div class="upload-area">
+          <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFileSelect(event)">
+          <div class="icon">📸</div>
+          <div class="text">点击上传截图</div>
+          <div class="hint">支持 JPG / PNG，单张最大 10MB</div>
+        </div>
+        <div class="preview-grid" id="previewGrid"></div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-title">补充说明</div>
+
+      <div class="form-group">
+        <label>备注 <span class="tag">选填，最多200字</span></label>
+        <textarea name="remark" id="remarkText" placeholder="请描述券包新增背景或其他补充..." maxlength="200" oninput="updateCharCount()"></textarea>
+        <div class="char-count"><span id="charCount">0</span> / 200</div>
+      </div>
+
+      <div class="status-bar" id="statusBar"></div>
+      <button type="submit" class="submit-btn" id="submitBtn">✅ 提交反馈</button>
+    </form>
+  </div>
+</div>
+
+<!-- 成功弹窗 -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="icon">🎉</div>
+    <h2>提交成功！</h2>
+    <p>数据已写入汇总表格<br>
+       <a href="https://km.sankuai.com/xtable/2763621760?table=2763427870" target="_blank" style="color:#FF6B00;">点击查看汇总数据 →</a>
+    </p>
+    <button onclick="resetForm()">继续填写</button>
+  </div>
+</div>
+
+<script>
+  // ===== 配置区域 =====
+  const TABLE_ID = '2763427870';
+  const CONTENT_ID = '2763621760';
+  // 列 ID 映射（与学城多维表格一一对应）
+  const COL = {
+    submitDate:   1,   // 提交日期（时间戳）
+    mis:          2,   // 提交人MIS
+    merchantName: 3,   // 商家名称
+    merchantId:   4,   // 商家ID
+    area:         5,   // 所属蜂窝
+    productName:  6,   // 商品名称
+    couponType:   7,   // 券包类型（单选）
+    oriPrice:     8,   // 原价
+    actPrice:     9,   // 活动价
+    discount:     10,  // 折扣
+    subsidy:      11,  // 补贴来源（单选）
+    screenshots:  12,  // C端截图（附件）
+    remark:       13,  // 补充说明
+  };
+  // ====================
+
+  document.getElementById('submitDate').value = new Date().toISOString().slice(0, 10);
+
+  document.getElementById('oriPrice').addEventListener('input', calcDiscount);
+  document.getElementById('actPrice').addEventListener('input', calcDiscount);
+
+  function calcDiscount() {
+    const ori = parseFloat(document.getElementById('oriPrice').value);
+    const act = parseFloat(document.getElementById('actPrice').value);
+    const el = document.getElementById('discountDisplay');
+    if (ori > 0 && act > 0 && act <= ori) {
+      el.value = (act / ori * 10).toFixed(1) + '折';
+    } else {
+      el.value = '';
+    }
+  }
+
+  function updateCharCount() {
+    document.getElementById('charCount').textContent = document.getElementById('remarkText').value.length;
+  }
+
+  let selectedFiles = [];
+
+  function handleFileSelect(event) {
+    Array.from(event.target.files).forEach(file => {
+      if (file.size > 10 * 1024 * 1024) { alert('「' + file.name + '」超过10MB，已跳过'); return; }
+      const idx = selectedFiles.length;
+      selectedFiles.push(file);
+      const reader = new FileReader();
+      reader.onload = (e) => addPreview(e.target.result, idx);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function addPreview(src, index) {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    item.id = 'preview_' + index;
+    item.innerHTML = '<img src="' + src + '"><button type="button" class="remove-btn" onclick="removePreview(' + index + ')">×</button>';
+    document.getElementById('previewGrid').appendChild(item);
+  }
+
+  function removePreview(index) {
+    const el = document.getElementById('preview_' + index);
+    if (el) el.remove();
+    selectedFiles[index] = null;
+  }
+
+  function setStatus(type, msg) {
+    const bar = document.getElementById('statusBar');
+    bar.className = 'status-bar ' + type;
+    bar.textContent = msg;
+  }
+
+  // 上传图片到学城
+  async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const resp = await fetch('/api/km/file/upload?contentId=' + CONTENT_ID, {
+      method: 'POST', body: formData, credentials: 'include'
+    });
+    if (!resp.ok) throw new Error('图片上传失败：' + file.name);
+    const json = await resp.json();
+    if (json.code !== 0) throw new Error(json.message || '图片上传失败');
+    return { attachmentId: json.data.attachmentId, name: file.name, url: json.data.url };
+  }
+
+  // 提交数据到学城多维表格
+  async function addTableRow(rowData) {
+    const resp = await fetch('/api/km/xtable/row/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ tableId: TABLE_ID, ...rowData })
+    });
+    if (!resp.ok) throw new Error('数据提交失败，HTTP ' + resp.status);
+    const json = await resp.json();
+    if (json.code !== 0) throw new Error(json.message || '数据提交失败');
+    return json;
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const activeFiles = selectedFiles.filter(Boolean);
+    if (activeFiles.length === 0) { alert('请至少上传一张C端截图'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    setStatus('loading', '⏳ 正在上传图片并提交数据...');
+
+    try {
+      const fd = new FormData(document.getElementById('feedbackForm'));
+      const dateStr = fd.get('submit_date');
+      const ts = dateStr ? new Date(dateStr).getTime() : Date.now();
+
+      // 上传图片
+      setStatus('loading', '⏳ 正在上传截图（' + activeFiles.length + '张）...');
+      const attachments = [];
+      for (const file of activeFiles) {
+        const info = await uploadImage(file);
+        attachments.push(JSON.stringify(info));
+      }
+
+      // 构造数据行
+      const ori = parseFloat(fd.get('original_price')) || 0;
+      const act = parseFloat(fd.get('activity_price')) || 0;
+      const discount = (ori > 0 && act > 0) ? (act / ori * 10).toFixed(1) + '折' : '';
+
+      const columnIds = Object.values(COL).join(',');
+      const rowData = [
+        ts,
+        fd.get('mis_id') || '',
+        fd.get('merchant_name') || '',
+        fd.get('merchant_id') || '',
+        fd.get('area') || '',
+        fd.get('product_name') || '',
+        fd.get('coupon_type') || '',
+        ori,
+        act,
+        discount,
+        fd.get('subsidy_source') || '',
+        attachments,
+        fd.get('remark') || '',
+      ];
+
+      setStatus('loading', '⏳ 正在写入汇总表格...');
+      await addTableRow({ columnIds, data: JSON.stringify([rowData]) });
+
+      document.getElementById('statusBar').style.display = 'none';
+      document.getElementById('successModal').classList.add('show');
+
+    } catch (err) {
+      setStatus('error', '❌ ' + (err.message || '提交失败，请重试'));
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('feedbackForm').reset();
+    document.getElementById('previewGrid').innerHTML = '';
+    document.getElementById('charCount').textContent = '0';
+    document.getElementById('discountDisplay').value = '';
+    document.getElementById('submitDate').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('statusBar').style.display = 'none';
+    selectedFiles = [];
+    document.getElementById('successModal').classList.remove('show');
+  }
+</script>
+</body>
+</html>
